@@ -39,7 +39,7 @@ class GeminiLiveClient(
     // Listeners
     var onAmplitudeUpdated: ((Float) -> Unit)? = null
     var onTranscriptReceived: ((String) -> Unit)? = null
-    var onToolCallReceived: ((functionName: String, args: JsonObject) -> Unit)? = null
+    var onToolCallReceived: ((callId: String?, functionName: String, args: JsonObject) -> Unit)? = null
     var onConnectionStateChanged: ((Boolean) -> Unit)? = null
 
     init {
@@ -130,12 +130,131 @@ class GeminiLiveClient(
                     add("parts", partsArray)
                 }
                 add("systemInstruction", systemInstruction)
+
+                // Autonomous Neural Tools declarations
+                add("tools", buildToolsJson())
             }
             add("setup", setup)
         }
 
         webSocket?.send(setupJson.toString())
         Log.d(tag, "Gemini Live Setup Configuration Dispatched")
+    }
+
+    private fun buildToolsJson(): com.google.gson.JsonArray {
+        val toolsArray = com.google.gson.JsonArray()
+        val toolsObj = JsonObject()
+        val funcDecls = com.google.gson.JsonArray()
+
+        fun addFunc(name: String, desc: String, props: Map<String, Pair<String, String>>, required: List<String>) {
+            val f = JsonObject().apply {
+                addProperty("name", name)
+                addProperty("description", desc)
+                val params = JsonObject().apply {
+                    addProperty("type", "OBJECT")
+                    val properties = JsonObject().apply {
+                        for ((propName, propDetails) in props) {
+                            val (type, description) = propDetails
+                            val p = JsonObject().apply {
+                                addProperty("type", type)
+                                addProperty("description", description)
+                            }
+                            add(propName, p)
+                        }
+                    }
+                    add("properties", properties)
+                    if (required.isNotEmpty()) {
+                        val req = com.google.gson.JsonArray().apply {
+                            required.forEach { add(it) }
+                        }
+                        add("required", req)
+                    }
+                }
+                add("parameters", params)
+            }
+            funcDecls.add(f)
+        }
+
+        addFunc(
+            "tap_screen",
+            "Taps on the Android screen at specific x and y coordinates",
+            mapOf("x" to Pair("NUMBER", "X coordinate in pixels"), "y" to Pair("NUMBER", "Y coordinate in pixels")),
+            listOf("x", "y")
+        )
+        addFunc(
+            "multi_tap",
+            "Taps multiple times rapidly at specific x and y coordinates",
+            mapOf("x" to Pair("NUMBER", "X coordinate"), "y" to Pair("NUMBER", "Y coordinate"), "count" to Pair("INTEGER", "Number of taps")),
+            listOf("x", "y")
+        )
+        addFunc(
+            "continuous_swiping",
+            "Continuously scrolls the screen looking for specific target text",
+            mapOf("target_text" to Pair("STRING", "Text label or element to find"), "scroll_down" to Pair("BOOLEAN", "True for scroll down, false for up")),
+            listOf("target_text")
+        )
+        addFunc(
+            "toggle_flashlight",
+            "Turns the phone camera flashlight on or off",
+            mapOf("enable" to Pair("BOOLEAN", "True to turn on, false to turn off")),
+            listOf("enable")
+        )
+        addFunc(
+            "make_call",
+            "Initiates a phone call (strictly requires SAMRAT's verbal permission)",
+            mapOf("phone_number" to Pair("STRING", "Phone number to call")),
+            listOf("phone_number")
+        )
+        addFunc(
+            "send_whatsapp",
+            "Sends a WhatsApp message to a contact (strictly requires SAMRAT's verbal permission)",
+            mapOf("phone_number" to Pair("STRING", "Phone number with country code"), "message" to Pair("STRING", "Message body")),
+            listOf("phone_number", "message")
+        )
+        addFunc(
+            "delete_storage_file",
+            "Deletes a file on device storage (strictly requires SAMRAT's verbal permission)",
+            mapOf("file_path" to Pair("STRING", "Full absolute file path")),
+            listOf("file_path")
+        )
+        addFunc(
+            "deep_search",
+            "Researches deeply on a topic and shows distilled intelligence on the HUD popup",
+            mapOf("query" to Pair("STRING", "The research topic or question")),
+            listOf("query")
+        )
+        addFunc(
+            "analyze_screen",
+            "Captures the active phone screen and analyzes its content visually",
+            emptyMap(),
+            emptyList()
+        )
+
+        toolsObj.add("functionDeclarations", funcDecls)
+        toolsArray.add(toolsObj)
+        return toolsArray
+    }
+
+    fun sendToolResponse(callId: String?, functionName: String, output: JsonObject) {
+        val toolResponseJson = JsonObject().apply {
+            val toolResp = JsonObject().apply {
+                val functionResponses = com.google.gson.JsonArray().apply {
+                    add(JsonObject().apply {
+                        if (!callId.isNullOrBlank()) {
+                            addProperty("id", callId)
+                        }
+                        addProperty("name", functionName)
+                        val response = JsonObject().apply {
+                            add("output", output)
+                        }
+                        add("response", response)
+                    })
+                }
+                add("functionResponses", functionResponses)
+            }
+            add("toolResponse", toolResp)
+        }
+        webSocket?.send(toolResponseJson.toString())
     }
 
     /**
@@ -213,8 +332,9 @@ class GeminiLiveClient(
                     if (partObj.has("functionCall")) {
                         val fn = partObj.getAsJsonObject("functionCall")
                         val name = fn.get("name").asString
-                        val args = fn.getAsJsonObject("args")
-                        onToolCallReceived?.invoke(name, args)
+                        val callId = if (fn.has("id")) fn.get("id").asString else null
+                        val args = if (fn.has("args")) fn.getAsJsonObject("args") else JsonObject()
+                        onToolCallReceived?.invoke(callId, name, args)
                     }
                 }
             }

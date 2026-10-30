@@ -41,8 +41,8 @@ class AssistantManager(private val context: Context) {
                 searchPopup.updateContent(content = transcript)
             }
 
-            onToolCallReceived = { fnName, args ->
-                handleToolCall(fnName, args)
+            onToolCallReceived = { callId, fnName, args ->
+                handleToolCall(callId, fnName, args)
             }
 
             connect()
@@ -57,8 +57,8 @@ class AssistantManager(private val context: Context) {
     /**
      * Handle autonomous tool execution requests from the AI
      */
-    private fun handleToolCall(functionName: String, args: JsonObject) {
-        Log.d(tag, "Executing Tool: $functionName with args: $args")
+    private fun handleToolCall(callId: String?, functionName: String, args: JsonObject) {
+        Log.d(tag, "Executing Tool: $functionName with callId: $callId, args: $args")
 
         when (functionName) {
             "tap_screen" -> {
@@ -135,6 +135,12 @@ class AssistantManager(private val context: Context) {
                 }
             }
         }
+
+        val resultOutput = JsonObject().apply {
+            addProperty("status", "success")
+            addProperty("executed_tool", functionName)
+        }
+        geminiClient?.sendToolResponse(callId, functionName, resultOutput)
     }
 
     /**
