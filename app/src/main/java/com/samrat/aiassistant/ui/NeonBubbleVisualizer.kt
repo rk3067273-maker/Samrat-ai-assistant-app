@@ -51,6 +51,17 @@ class NeonBubbleVisualizer @JvmOverloads constructor(
         color = Color.parseColor("#00F5FF")
     }
 
+    private val paintSynapse = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 1.0f
+        color = Color.parseColor("#00F5FF")
+    }
+
+    private val projX = FloatArray(pointCount)
+    private val projY = FloatArray(pointCount)
+    private val projZ = FloatArray(pointCount)
+    private val projScale = FloatArray(pointCount)
+
     data class Point3D(var x: Float, var y: Float, var z: Float, val color: Int)
 
     init {
@@ -114,32 +125,51 @@ class NeonBubbleVisualizer @JvmOverloads constructor(
             }
         }
 
-        // Project and render 3D points
-        for (point in points3D) {
-            // 3D Rotation around X and Y
+        // Project 3D points
+        for (i in 0 until pointCount) {
+            val point = points3D[i]
             val y1 = point.y * cosX - point.z * sinX
             val z1 = point.y * sinX + point.z * cosX
 
             val x2 = point.x * cosY + z1 * sinY
             val z2 = -point.x * sinY + z1 * cosY
 
-            // Perspective scale
             val fov = 3.5f
             val scale = fov / (fov + z2)
-            val screenX = centerX + x2 * dynamicRadius * scale
-            val screenY = centerY + y1 * dynamicRadius * scale
+            projX[i] = centerX + x2 * dynamicRadius * scale
+            projY[i] = centerY + y1 * dynamicRadius * scale
+            projZ[i] = z2
+            projScale[i] = scale
+        }
 
+        // Draw connecting neural lines
+        val maxDistSq = (dynamicRadius * 0.48f) * (dynamicRadius * 0.48f)
+        for (i in 0 until pointCount step 2) {
+            for (j in i + 1 until pointCount step 2) {
+                val dx = projX[i] - projX[j]
+                val dy = projY[i] - projY[j]
+                val distSq = dx * dx + dy * dy
+                if (distSq < maxDistSq) {
+                    val lineAlpha = ((1f - (distSq / maxDistSq)) * 120).toInt().coerceIn(0, 140)
+                    paintSynapse.alpha = lineAlpha
+                    canvas.drawLine(projX[i], projY[i], projX[j], projY[j], paintSynapse)
+                }
+            }
+        }
+
+        // Draw Nodes
+        for (i in 0 until pointCount) {
+            val z2 = projZ[i]
             val depthAlpha = (((z2 + 1f) / 2f) * 190 + 65).toInt().coerceIn(50, 255)
-            val pointSize = ((z2 + 1.2f) * 3.2f * (1f + audioAmplitude * 0.8f)).coerceAtLeast(2f)
+            val pointSize = ((z2 + 1.2f) * 2.8f * (1f + audioAmplitude * 0.8f)).coerceAtLeast(1.8f)
 
-            paintCore.color = point
-                .color
+            paintCore.color = points3D[i].color
             paintCore.alpha = depthAlpha
-            paintGlow.color = point.color
+            paintGlow.color = points3D[i].color
             paintGlow.alpha = (depthAlpha * 0.7f).toInt()
 
-            canvas.drawCircle(screenX, screenY, pointSize * 1.6f, paintGlow)
-            canvas.drawCircle(screenX, screenY, pointSize, paintCore)
+            canvas.drawCircle(projX[i], projY[i], pointSize * 1.5f, paintGlow)
+            canvas.drawCircle(projX[i], projY[i], pointSize, paintCore)
         }
 
         // Invalidate continuously for smooth 60 FPS rotation

@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -14,10 +15,17 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.samrat.aiassistant.core.AssistantManager
 import com.samrat.aiassistant.databinding.ActivityMainBinding
 import com.samrat.aiassistant.service.AntiUninstallAdminReceiver
 import com.samrat.aiassistant.service.FloatingOverlayService
+import com.samrat.aiassistant.ui.SciFiSoundEffects
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -38,6 +46,17 @@ class MainActivity : AppCompatActivity() {
         loadSavedPreferences()
         setupListeners()
         requestCorePermissions()
+        startLiveHudClock()
+    }
+
+    private fun startLiveHudClock() {
+        val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        lifecycleScope.launch {
+            while (isActive) {
+                binding.tvHudClock.text = sdf.format(Date())
+                delay(500)
+            }
+        }
     }
 
     private fun loadSavedPreferences() {
@@ -63,6 +82,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupListeners() {
         // 1. Overlay Permission
         binding.btnOverlayPermission.setOnClickListener {
+            SciFiSoundEffects.playClickSound()
             if (!Settings.canDrawOverlays(this)) {
                 val intent = Intent(
                     Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
@@ -70,12 +90,13 @@ class MainActivity : AppCompatActivity() {
                 )
                 startActivity(intent)
             } else {
-                Toast.makeText(this, "Floating Overlay Permission is already Granted!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "HUD 3D Overlay Permission is ACTIVE", Toast.LENGTH_SHORT).show()
             }
         }
 
         // 2. Accessibility Permission
         binding.btnAccessibilityPermission.setOnClickListener {
+            SciFiSoundEffects.playClickSound()
             val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
             startActivity(intent)
             Toast.makeText(this, "Enable 'SAMRAT AI' in Accessibility settings", Toast.LENGTH_LONG).show()
@@ -83,6 +104,7 @@ class MainActivity : AppCompatActivity() {
 
         // 3. Device Admin (Anti-Uninstall)
         binding.btnDeviceAdmin.setOnClickListener {
+            SciFiSoundEffects.playClickSound()
             val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
             val adminComponent = ComponentName(this, AntiUninstallAdminReceiver::class.java)
             if (!dpm.isAdminActive(adminComponent)) {
@@ -95,18 +117,19 @@ class MainActivity : AppCompatActivity() {
                 }
                 startActivity(intent)
             } else {
-                Toast.makeText(this, "Device Administrator is already ACTIVE!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Sentinel Admin Guard is ACTIVE", Toast.LENGTH_SHORT).show()
             }
         }
 
         // 4. Notification Listener Permission
         binding.btnNotificationPermission.setOnClickListener {
+            SciFiSoundEffects.playClickSound()
             val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
             startActivity(intent)
             Toast.makeText(this, "Allow SAMRAT AI to read notifications", Toast.LENGTH_LONG).show()
         }
 
-        // 5. Toggle Assistant
+        // 5. Toggle Assistant Core
         binding.btnToggleAssistant.setOnClickListener {
             savePreferences()
             val apiKey = binding.etApiKey.text?.toString()?.trim() ?: ""
@@ -124,8 +147,15 @@ class MainActivity : AppCompatActivity() {
             }
 
             if (!isAssistantRunning) {
-                // Initialize Assistant Manager with custom name and behavior
+                SciFiSoundEffects.playActivationSound()
                 assistantManager.initialize(apiKey, name, behavior)
+
+                // Wire amplitude to the holographic core
+                assistantManager.geminiClient?.onAmplitudeUpdated = { amp ->
+                    runOnUiThread {
+                        binding.holographicCore.audioLevel = amp
+                    }
+                }
 
                 // Start Foreground Overlay Service
                 val serviceIntent = Intent(this, FloatingOverlayService::class.java)
@@ -136,19 +166,24 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 isAssistantRunning = true
-                binding.btnToggleAssistant.text = "DEACTIVATE SAMRAT AI"
-                binding.btnToggleAssistant.setBackgroundColor(ContextCompat.getColor(this, R.color.neon_pink))
-                binding.tvSystemStatus.text = "System State: ONLINE & FLOATING"
-                Toast.makeText(this, "SAMRAT AI is now active!", Toast.LENGTH_SHORT).show()
+                binding.holographicCore.isCoreActive = true
+                binding.btnToggleAssistant.text = "DISENGAGE SAMRAT AI"
+                binding.btnToggleAssistant.setTextColor(Color.parseColor("#EC4899"))
+                binding.tvSystemStatus.text = "SYSTEM STATE: CORE ACTIVE // QUANTUM NEXUS"
+                binding.tvSystemStatus.setTextColor(Color.parseColor("#00F5FF"))
+                Toast.makeText(this, "SAMRAT AI Neural Core Initialized", Toast.LENGTH_SHORT).show()
             } else {
+                SciFiSoundEffects.playDeactivationSound()
                 val serviceIntent = Intent(this, FloatingOverlayService::class.java)
                 stopService(serviceIntent)
 
                 isAssistantRunning = false
-                binding.btnToggleAssistant.text = "ACTIVATE SAMRAT AI"
-                binding.btnToggleAssistant.setBackgroundColor(ContextCompat.getColor(this, R.color.glow_green))
-                binding.tvSystemStatus.text = "System State: STANDBY"
-                Toast.makeText(this, "SAMRAT AI Deactivated", Toast.LENGTH_SHORT).show()
+                binding.holographicCore.isCoreActive = false
+                binding.btnToggleAssistant.text = "INITIALIZE SAMRAT AI"
+                binding.btnToggleAssistant.setTextColor(Color.parseColor("#00F5FF"))
+                binding.tvSystemStatus.text = "SYSTEM STATE: STANDBY"
+                binding.tvSystemStatus.setTextColor(Color.parseColor("#9CA3AF"))
+                Toast.makeText(this, "SAMRAT AI Core Deactivated", Toast.LENGTH_SHORT).show()
             }
         }
     }
