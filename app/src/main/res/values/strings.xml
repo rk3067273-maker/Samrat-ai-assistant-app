@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">SAMRAT AI</string>
+    <string name="device_admin_label">SAMRAT AI Assistant Protection</string>
+    <string name="device_admin_description">Prevents unauthorized removal and protects administrative persistence for SAMRAT\'s personal assistant.</string>
+    <string name="accessibility_service_description">Enables autonomous touch, continuous swiping, screen analysis, and app control for SAMRAT AI Assistant.</string>
+    <string name="bubble_overlay_active">SAMRAT AI is active and monitoring.</string>
+</resources>

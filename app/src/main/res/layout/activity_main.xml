@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_dark"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- Title & Subtitle -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SAMRAT AI"
+            android:textColor="@color/neon_cyan"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Neural Autonomous Companion | Dedicated to SAMRAT"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
+
+        <!-- Status Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            app:cardBackgroundColor="@color/card_dark"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="6dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/tvSystemStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="System State: STANDBY"
+                    android:textColor="@color/glow_green"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvVoiceModel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Gemini 2.0 / 3.8 Live API: READY"
+                    android:textColor="@color/neon_purple"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- API Key & Config -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="API Configuration"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColorHint="@color/text_secondary"
+            app:boxBackgroundColor="@color/card_dark"
+            app:boxCornerRadiusBottomEnd="12dp"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxStrokeColor="@color/neon_cyan">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etApiKey"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Gemini API Key"
+                android:inputType="textPassword"
+                android:textColor="@color/text_primary" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Assistant Custom Name -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textColorHint="@color/text_secondary"
+            app:boxBackgroundColor="@color/card_dark"
+            app:boxCornerRadiusBottomEnd="12dp"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxStrokeColor="@color/neon_purple">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etAssistantName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Assistant Name (Default: JARVIS)"
+                android:text="JARVIS"
+                android:textColor="@color/text_primary" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Assistant Custom Behavior / Personality -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textColorHint="@color/text_secondary"
+            app:boxBackgroundColor="@color/card_dark"
+            app:boxCornerRadiusBottomEnd="12dp"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxStrokeColor="@color/neon_cyan">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etAssistantBehavior"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Custom Behavior / Personality (e.g. অত্যন্ত গম্ভীর, বন্ধুসুলভ, বিজ্ঞানী)"
+                android:inputType="textMultiLine"
+                android:minLines="2"
+                android:textColor="@color/text_primary" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Action / Permission Buttons -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Permissions &amp; Services"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <!-- Overlay Permission Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnOverlayPermission"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="10dp"
+            android:text="1. Enable Floating 3D Bubble"
+            android:textColor="@color/black"
+            app:backgroundTint="@color/neon_cyan"
+            app:cornerRadius="12dp" />
+
+        <!-- Accessibility Permission Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAccessibilityPermission"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:text="2. Enable Touch &amp; Swipe Automation"
+            android:textColor="@color/white"
+            app:backgroundTint="@color/neon_blue"
+            app:cornerRadius="12dp" />
+
+        <!-- Device Admin Permission Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDeviceAdmin"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:text="3. Enable Anti-Uninstall Admin Lock"
+            android:textColor="@color/white"
+            app:backgroundTint="@color/neon_purple"
+            app:cornerRadius="12dp" />
+
+        <!-- Notification Listener Permission Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnNotificationPermission"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:text="4. Enable Notification Listener"
+            android:textColor="@color/text_primary"
+            app:backgroundTint="@color/card_dark"
+            app:cornerRadius="12dp"
+            app:strokeColor="@color/neon_cyan"
+            app:strokeWidth="1dp" />
+
+        <!-- Start / Stop Assistant Service Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnToggleAssistant"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="32dp"
+            android:text="ACTIVATE SAMRAT AI"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:backgroundTint="@color/glow_green"
+            app:cornerRadius="16dp" />
+
+    </LinearLayout>
+</ScrollView>
